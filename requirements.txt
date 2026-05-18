@@ -5,3 +5,4 @@ langchain
 langchain-groq
 SpeechRecognition
 python-dotenv
+playsound==1.2.2
