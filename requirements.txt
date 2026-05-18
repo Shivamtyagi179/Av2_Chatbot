@@ -3,6 +3,5 @@ openai
 edge-tts
 langchain
 langchain-groq
-speechrecognition
-playsound
+SpeechRecognition
 python-dotenv
