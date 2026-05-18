@@ -1,2 +1,8 @@
 streamlit
 openai
+edge-tts
+langchain
+langchain-groq
+speechrecognition
+playsound
+python-dotenv
