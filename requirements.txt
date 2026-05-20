@@ -1,8 +1,9 @@
-streamlit
-openai
-edge-tts
-langchain
-langchain-groq
-SpeechRecognition
-python-dotenv
+streamlit==1.37.1
+langchain==0.2.14
+langchain-groq==0.1.9
+groq==0.9.0
+openai==1.40.6
+edge-tts==6.1.12
+SpeechRecognition==3.10.4
+python-dotenv==1.0.1
 playsound==1.2.2
