@@ -1,10 +1,6 @@
 import streamlit as st
 import os
-import asyncio
-import edge_tts
-import tempfile
 import speech_recognition as sr
-from playsound import playsound
 from datetime import datetime
 from langchain_groq import ChatGroq
 from langchain_core.messages import SystemMessage, HumanMessage
@@ -129,21 +125,10 @@ section[data-testid="stChatInput"] {
 VOICE = "en-US-AriaNeural"
 
 def speak(text):
-    asyncio.run(async_speak(text))
 
-
-async def async_speak(text):
-
-    fd, path = tempfile.mkstemp(suffix=".mp3")
-    os.close(fd)
-
-    communicate = edge_tts.Communicate(text, VOICE)
-
-    await communicate.save(path)
-
-    playsound(path)
-
-    os.remove(path)
+    # Streamlit Cloud compatibility
+    # Audio playback disabled on cloud
+    return
 
 # =====================================================
 # VOICE LISTENER
@@ -154,6 +139,7 @@ recognizer = sr.Recognizer()
 def listen():
 
     try:
+
         with sr.Microphone() as source:
 
             recognizer.adjust_for_ambient_noise(source)
@@ -168,15 +154,24 @@ def listen():
         return None
 
 # =====================================================
-# LLM
+# GROQ LLM SETUP
 # =====================================================
 
-llm = ChatGroq(
-    model="openai/gpt-oss-20b",
-    api_key=os.getenv("GROQ_API_KEY"),
-    temperature=0.7,
-    max_tokens=700,
-)
+try:
+
+    groq_api_key = st.secrets["GROQ_API_KEY"]
+
+    llm = ChatGroq(
+        groq_api_key=groq_api_key,
+        model="llama3-8b-8192",
+        temperature=0.7,
+        max_tokens=700,
+    )
+
+except Exception as e:
+
+    st.error(f"❌ Groq Initialization Error: {e}")
+    st.stop()
 
 # =====================================================
 # SYSTEM PROMPT
@@ -328,24 +323,6 @@ with st.sidebar:
     if st.button("👋 Assistant Intro", key="intro_btn"):
         speak("Hello, I am AV2 Assistant created by Shivam Tyagi.")
 
-    st.markdown("---")
-
-    st.markdown("""
-    <div class='sidebar-card'>
-    <h3>🚀 Features</h3>
-
-    ✅ Neural Voice AI<br>
-    ✅ Voice Input<br>
-    ✅ Replay Voice<br>
-    ✅ Smart GUI<br>
-    ✅ Session Memory<br>
-    ✅ Groq AI<br>
-    ✅ Cyber UI<br>
-    ✅ Live Controls<br>
-
-    </div>
-    """, unsafe_allow_html=True)
-
 # =====================================================
 # HEADER
 # =====================================================
@@ -396,9 +373,7 @@ for i, msg in enumerate(st.session_state.messages):
 
         with col2:
 
-            if st.button("🔊", key=f"voice_{i}"):
-
-                speak(msg["content"])
+            st.button("🔊", key=f"voice_{i}")
 
 # =====================================================
 # INPUT AREA
@@ -483,9 +458,15 @@ if st.session_state.messages:
                     )
                 )
 
-            response = llm.invoke(history)
+            try:
 
-            reply = response.content
+                response = llm.invoke(history)
+
+                reply = response.content
+
+            except Exception as e:
+
+                reply = f"❌ AI Error: {str(e)}"
 
         st.session_state.messages.append(
             {
