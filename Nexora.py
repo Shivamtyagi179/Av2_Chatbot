@@ -14,7 +14,7 @@ from langchain_core.messages import SystemMessage, HumanMessage
 # =====================================================
 
 st.set_page_config(
-    page_title="Nexora AI Assistant",
+    page_title="AV2_Chatbot",
     page_icon="🤖",
     layout="wide",
     initial_sidebar_state="expanded"
@@ -129,34 +129,21 @@ section[data-testid="stChatInput"] {
 VOICE = "en-US-AriaNeural"
 
 def speak(text):
-
-    try:
-        asyncio.run(async_speak(text))
-    except:
-        pass
+    asyncio.run(async_speak(text))
 
 
 async def async_speak(text):
 
-    try:
+    fd, path = tempfile.mkstemp(suffix=".mp3")
+    os.close(fd)
 
-        fd, path = tempfile.mkstemp(suffix=".mp3")
-        os.close(fd)
+    communicate = edge_tts.Communicate(text, VOICE)
 
-        communicate = edge_tts.Communicate(text, VOICE)
+    await communicate.save(path)
 
-        await communicate.save(path)
+    playsound(path)
 
-        try:
-            playsound(path)
-        except:
-            pass
-
-        if os.path.exists(path):
-            os.remove(path)
-
-    except:
-        pass
+    os.remove(path)
 
 # =====================================================
 # VOICE LISTENER
@@ -167,7 +154,6 @@ recognizer = sr.Recognizer()
 def listen():
 
     try:
-
         with sr.Microphone() as source:
 
             recognizer.adjust_for_ambient_noise(source)
@@ -182,31 +168,22 @@ def listen():
         return None
 
 # =====================================================
-# GROQ LLM SETUP
+# LLM
 # =====================================================
 
-try:
-
-    groq_api_key = st.secrets["GROQ_API_KEY"]
-
-    llm = ChatGroq(
-        groq_api_key=groq_api_key,
-        model="llama3-8b-8192",
-        temperature=0.7,
-        max_tokens=700,
-    )
-
-except Exception as e:
-
-    st.error(f"❌ Groq Initialization Error: {e}")
-    st.stop()
+llm = ChatGroq(
+    model="openai/gpt-oss-20b",
+    api_key=os.getenv("GROQ_API_KEY"),
+    temperature=0.7,
+    max_tokens=700,
+)
 
 # =====================================================
 # SYSTEM PROMPT
 # =====================================================
 
 SYSTEM_PROMPT = """
-You are Nexora AI Assistant.
+You are AV2 Assistant.
 You were created and trained by Shivam Tyagi.
 You are powered by the Artery framework.
 
@@ -225,7 +202,7 @@ reply:
 
 If anyone asks who are you,
 reply:
-'I am Nexora, an advanced AI assistant created by Shivam Tyagi.'
+'I am AV2, an advanced Chatbot assistant created by Shivam Tyagi.'
 """
 
 # =====================================================
@@ -255,7 +232,7 @@ backdrop-filter: blur(12px);
 ">
 
 <div>
-<h3 style='margin:0;'>⚡ Nexora Neural Core</h3>
+<h3 style='margin:0;'>⚡ AV2 Neural Core</h3>
 <small style='color:#94a3b8;'>Advanced AI Interface</small>
 </div>
 
@@ -273,7 +250,7 @@ backdrop-filter: blur(12px);
 
 with st.sidebar:
 
-    st.markdown("## ⚡ Nexora Control Panel")
+    st.markdown("## ⚡ AV2 Control Panel")
 
     st.markdown("---")
 
@@ -349,14 +326,32 @@ with st.sidebar:
         st.rerun()
 
     if st.button("👋 Assistant Intro", key="intro_btn"):
-        speak("Hello, I am Nexora AI Assistant created by Shivam Tyagi.")
+        speak("Hello, I am AV2 Assistant created by Shivam Tyagi.")
+
+    st.markdown("---")
+
+    st.markdown("""
+    <div class='sidebar-card'>
+    <h3>🚀 Features</h3>
+
+    ✅ Neural Voice AI<br>
+    ✅ Voice Input<br>
+    ✅ Replay Voice<br>
+    ✅ Smart GUI<br>
+    ✅ Session Memory<br>
+    ✅ Groq AI<br>
+    ✅ Cyber UI<br>
+    ✅ Live Controls<br>
+
+    </div>
+    """, unsafe_allow_html=True)
 
 # =====================================================
 # HEADER
 # =====================================================
 
 st.markdown(
-    "<h1 class='main-title'>🤖 Nexora AI Assistant</h1>",
+    "<h1 class='main-title'>🤖 AV2 Assistant</h1>",
     unsafe_allow_html=True
 )
 
@@ -392,7 +387,7 @@ for i, msg in enumerate(st.session_state.messages):
             st.markdown(f"""
             <div class='chat-ai'>
 
-            <b>🤖 Nexora</b><br><br>
+            <b>🤖 AV2</b><br><br>
 
             {msg['content']}
 
@@ -421,7 +416,7 @@ with col2:
 with col1:
 
     user_input = st.chat_input(
-        "Ask Nexora anything..."
+        "Ask AV2 anything..."
     )
 
 # =====================================================
@@ -470,7 +465,9 @@ if st.session_state.messages:
 
     if last_msg["role"] == "user":
 
-        with st.spinner("🤖 Nexora is thinking..."):
+        with st.spinner("🤖 AV2 is thinking..."):
+
+            llm.temperature = ai_temp
 
             history = [
                 SystemMessage(content=SYSTEM_PROMPT)
@@ -486,15 +483,9 @@ if st.session_state.messages:
                     )
                 )
 
-            try:
+            response = llm.invoke(history)
 
-                response = llm.invoke(history)
-
-                reply = response.content
-
-            except Exception as e:
-
-                reply = f"❌ AI Error: {str(e)}"
+            reply = response.content
 
         st.session_state.messages.append(
             {
@@ -504,6 +495,7 @@ if st.session_state.messages:
         )
 
         if auto_voice:
+
             speak(reply)
 
         st.rerun()
