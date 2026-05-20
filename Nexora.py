@@ -129,21 +129,29 @@ section[data-testid="stChatInput"] {
 VOICE = "en-US-AriaNeural"
 
 def speak(text):
-    asyncio.run(async_speak(text))
+
+    try:
+        asyncio.run(async_speak(text))
+    except:
+        pass
 
 
 async def async_speak(text):
 
-    fd, path = tempfile.mkstemp(suffix=".mp3")
-    os.close(fd)
+    try:
+        fd, path = tempfile.mkstemp(suffix=".mp3")
+        os.close(fd)
 
-    communicate = edge_tts.Communicate(text, VOICE)
+        communicate = edge_tts.Communicate(text, VOICE)
 
-    await communicate.save(path)
+        await communicate.save(path)
 
-    playsound(path)
+        playsound(path)
 
-    os.remove(path)
+        os.remove(path)
+
+    except:
+        pass
 
 # =====================================================
 # VOICE LISTENER
@@ -168,15 +176,24 @@ def listen():
         return None
 
 # =====================================================
-# LLM
+# GROQ LLM SETUP
 # =====================================================
 
-llm = ChatGroq(
-    model="openai/gpt-oss-20b",
-    api_key=os.getenv("GROQ_API_KEY"),
-    temperature=0.7,
-    max_tokens=700,
-)
+try:
+
+    groq_api_key = st.secrets["GROQ_API_KEY"]
+
+    llm = ChatGroq(
+        groq_api_key=groq_api_key,
+        model="llama-3.1-8b-instant",
+        temperature=0.7,
+        max_tokens=700,
+    )
+
+except Exception as e:
+
+    st.error(f"❌ Groq Initialization Error: {e}")
+    st.stop()
 
 # =====================================================
 # SYSTEM PROMPT
