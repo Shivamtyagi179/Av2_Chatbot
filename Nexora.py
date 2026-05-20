@@ -139,6 +139,7 @@ def speak(text):
 async def async_speak(text):
 
     try:
+
         fd, path = tempfile.mkstemp(suffix=".mp3")
         os.close(fd)
 
@@ -146,9 +147,13 @@ async def async_speak(text):
 
         await communicate.save(path)
 
-        playsound(path)
+        try:
+            playsound(path)
+        except:
+            pass
 
-        os.remove(path)
+        if os.path.exists(path):
+            os.remove(path)
 
     except:
         pass
@@ -162,6 +167,7 @@ recognizer = sr.Recognizer()
 def listen():
 
     try:
+
         with sr.Microphone() as source:
 
             recognizer.adjust_for_ambient_noise(source)
@@ -185,7 +191,7 @@ try:
 
     llm = ChatGroq(
         groq_api_key=groq_api_key,
-        model="llama-3.1-8b-instant",
+        model="llama3-8b-8192",
         temperature=0.7,
         max_tokens=700,
     )
@@ -345,24 +351,6 @@ with st.sidebar:
     if st.button("👋 Assistant Intro", key="intro_btn"):
         speak("Hello, I am Nexora AI Assistant created by Shivam Tyagi.")
 
-    st.markdown("---")
-
-    st.markdown("""
-    <div class='sidebar-card'>
-    <h3>🚀 Features</h3>
-
-    ✅ Neural Voice AI<br>
-    ✅ Voice Input<br>
-    ✅ Replay Voice<br>
-    ✅ Smart GUI<br>
-    ✅ Session Memory<br>
-    ✅ Groq AI<br>
-    ✅ Cyber UI<br>
-    ✅ Live Controls<br>
-
-    </div>
-    """, unsafe_allow_html=True)
-
 # =====================================================
 # HEADER
 # =====================================================
@@ -484,8 +472,6 @@ if st.session_state.messages:
 
         with st.spinner("🤖 Nexora is thinking..."):
 
-            llm.temperature = ai_temp
-
             history = [
                 SystemMessage(content=SYSTEM_PROMPT)
             ]
@@ -500,9 +486,15 @@ if st.session_state.messages:
                     )
                 )
 
-            response = llm.invoke(history)
+            try:
 
-            reply = response.content
+                response = llm.invoke(history)
+
+                reply = response.content
+
+            except Exception as e:
+
+                reply = f"❌ AI Error: {str(e)}"
 
         st.session_state.messages.append(
             {
@@ -512,7 +504,6 @@ if st.session_state.messages:
         )
 
         if auto_voice:
-
             speak(reply)
 
         st.rerun()
