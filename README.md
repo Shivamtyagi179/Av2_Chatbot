@@ -75,7 +75,7 @@ AV2_Chatbot/
 
 Clone the repository:
 
-git clone https://github.com/your-username/AV2_Chatbot.git
+git clone https://github.com/shivamtyagi17/AV2_Chatbot.git
 
 cd AV2_Chatbot
 
