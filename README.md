@@ -9,7 +9,7 @@ Designed and developed by Shivam Tyagi, AV2 delivers an immersive AI experience 
 
 🚀 Live Demo
 
-🌐 AV2 AI Assistant Live Demo
+🌐 AV2 AI Assistant Live Demo - https://av2chatb-heglqkmwytnzonnacsfzos.streamlit.app/
 
 ----
 ✨ Features
